@@ -89,3 +89,11 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// set the priority of myproc 
+uint64
+sys_setpriority(int num) 
+{
+  argint(0,&num); //retrieving first argument
+  return setpriority(num);
+}

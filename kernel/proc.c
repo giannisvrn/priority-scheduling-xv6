@@ -140,6 +140,8 @@ found:
     return 0;
   }
 
+  p->priority = 10;
+
   // Set up new context to start executing at forkret,
   // which returns to user space.
   memset(&p->context, 0, sizeof(p->context));
@@ -441,34 +443,69 @@ wait(uint64 addr)
 //  - swtch to start running that process.
 //  - eventually that process transfers control
 //    via swtch back to the scheduler.
-void
-scheduler(void)
-{
-  struct proc *p;
-  struct cpu *c = mycpu();
+// void
+// scheduler(void)
+// {
+//   struct proc *p;
+//   struct cpu *c = mycpu();
   
-  c->proc = 0;
-  for(;;){
-    // Avoid deadlock by ensuring that devices can interrupt.
-    intr_on();
+//   c->proc = 0;
+//   for(;;){
+//     // Avoid deadlock by ensuring that devices can interrupt.
+//     intr_on();
 
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
+//     for(p = proc; p < &proc[NPROC]; p++) {
+//       acquire(&p->lock);
+//       if(p->state == RUNNABLE) {
+//         // Switch to chosen process.  It is the process's job
+//         // to release its lock and then reacquire it
+//         // before jumping back to us.
+//         p->state = RUNNING;
+//         c->proc = p;
+//         swtch(&c->context, &p->context);
 
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-      }
-      release(&p->lock);
+//         // Process is done running for now.
+//         // It should have changed its p->state before coming back.
+//         c->proc = 0;
+//       }
+//       release(&p->lock);
+//     }
+//   }
+// }
+void scheduler(void) {
+    struct proc *p;
+    struct cpu *c = mycpu();
+
+    c->proc = 0;
+
+    for (;;) {
+        intr_on();
+        struct proc *p_prio = 0;
+
+        for(p = proc; p < &proc[NPROC]; p++) {
+        // for (int i = 0; i < NPROC; i++) {
+            acquire(&p->lock);
+            if (p->state == RUNNABLE) {
+                if (p_prio == 0 || p->priority < p_prio->priority) {
+                    p_prio = p;
+                }
+            }
+            release(&p->lock);
+        }
+        if( p_prio != 0) { 
+          acquire(&p_prio->lock);
+          if(p_prio->state == RUNNABLE) { 
+            p_prio->state = RUNNING;
+            c->proc = p_prio;
+            swtch(&c->context, &p_prio->context);
+            c->proc = 0;
+            release(&p_prio->lock);
+          }
+          else { 
+            release(&p_prio->lock);
+          }
+        }
     }
-  }
 }
 
 // Switch to scheduler.  Must hold only p->lock
@@ -680,4 +717,15 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+int
+setpriority(int num)
+{
+  struct proc *p = myproc();
+
+  p->priority = num;
+  printf("priority: %d\n",p->priority);
+
+  return 0;
 }

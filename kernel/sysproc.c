@@ -92,8 +92,9 @@ sys_uptime(void)
 
 // set the priority of myproc 
 uint64
-sys_setpriority(int num) 
+sys_setpriority(void) 
 {
+  int num;
   argint(0,&num); //retrieving first argument
   return setpriority(num);
 }

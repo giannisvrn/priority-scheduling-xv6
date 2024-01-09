@@ -483,7 +483,6 @@ void scheduler(void) {
         struct proc *p_prio = 0;
 
         for(p = proc; p < &proc[NPROC]; p++) {
-        // for (int i = 0; i < NPROC; i++) {
             acquire(&p->lock);
             if (p->state == RUNNABLE) {
                 if (p_prio == 0 || p->priority < p_prio->priority) {
@@ -724,8 +723,9 @@ setpriority(int num)
 {
   struct proc *p = myproc();
 
+  if ( num < 1 || num  > 21)
+    return -1;
   p->priority = num;
-  printf("priority: %d\n",p->priority);
 
   return 0;
 }

@@ -105,7 +105,7 @@ sys_getpinfo(void) {
   struct pstat pst;
   uint64 addr;
 
-  argaddr(0, &addr); // Fetch user-supplied pointer from argument
+  argaddr(0, &addr);
 
   getpinfo(&pst);
 

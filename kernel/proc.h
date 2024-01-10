@@ -106,9 +106,3 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
 };
-
-// struct pstat { 
-//   int pid[NPROC];
-//   int priority[NPROC];
-//   int not_unused;
-// };

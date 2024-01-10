@@ -1,6 +1,6 @@
 struct stat;
 struct pstat;
-enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };  // add this in order to use it for ps
 
 
 // system calls

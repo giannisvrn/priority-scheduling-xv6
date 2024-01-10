@@ -6,6 +6,8 @@
 #include "proc.h"
 #include "defs.h"
 #include "pstat.h"
+#include <stddef.h>
+
 
 struct cpu cpus[NCPU];
 
@@ -444,35 +446,7 @@ wait(uint64 addr)
 //  - swtch to start running that process.
 //  - eventually that process transfers control
 //    via swtch back to the scheduler.
-// void
-// scheduler(void)
-// {
-//   struct proc *p;
-//   struct cpu *c = mycpu();
-  
-//   c->proc = 0;
-//   for(;;){
-//     // Avoid deadlock by ensuring that devices can interrupt.
-//     intr_on();
 
-//     for(p = proc; p < &proc[NPROC]; p++) {
-//       acquire(&p->lock);
-//       if(p->state == RUNNABLE) {
-//         // Switch to chosen process.  It is the process's job
-//         // to release its lock and then reacquire it
-//         // before jumping back to us.
-//         p->state = RUNNING;
-//         c->proc = p;
-//         swtch(&c->context, &p->context);
-
-//         // Process is done running for now.
-//         // It should have changed its p->state before coming back.
-//         c->proc = 0;
-//       }
-//       release(&p->lock);
-//     }
-//   }
-// }
 void scheduler(void) {
     struct proc *p;
     struct cpu *c = mycpu();
@@ -733,11 +707,10 @@ setpriority(int num)
   return 0;
 }
 
-#include <stddef.h>
 int getpinfo(struct pstat *pst) { 
   struct proc *p;
 
-  pst->not_unused = 0;
+  pst->not_unused = 0;  // initialize number of not unused 
 
   for(p = proc; p < &proc[NPROC]; p++) { 
     acquire(&p->lock);
@@ -751,7 +724,7 @@ int getpinfo(struct pstat *pst) {
       else 
         pst->ppid[pst->not_unused] = -1;
       pst->size[pst->not_unused] = p->sz;
-      pst->not_unused ++;
+      pst->not_unused ++;  // increase number of not unused
     }
     release(&p->lock);
   }

@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "pstat.h"
 
 struct cpu cpus[NCPU];
 
@@ -725,7 +726,35 @@ setpriority(int num)
 
   if ( num < 1 || num  > 21)
     return -1;
+  acquire(&p->lock);
   p->priority = num;
+  release(&p->lock);
+
+  return 0;
+}
+
+#include <stddef.h>
+int getpinfo(struct pstat *pst) { 
+  struct proc *p;
+
+  pst->not_unused = 0;
+
+  for(p = proc; p < &proc[NPROC]; p++) { 
+    acquire(&p->lock);
+    if( p->state != UNUSED) { 
+      pst->pid[pst->not_unused] = p->pid;
+      pst->priority[pst->not_unused] = p->priority;
+      safestrcpy(pst->name[pst->not_unused],p->name,sizeof(pst->name));
+      pst->state[pst->not_unused] = p->state;
+      if(p->parent != NULL)
+        pst->ppid[pst->not_unused] = p->parent->pid;
+      else 
+        pst->ppid[pst->not_unused] = -1;
+      pst->size[pst->not_unused] = p->sz;
+      pst->not_unused ++;
+    }
+    release(&p->lock);
+  }
 
   return 0;
 }

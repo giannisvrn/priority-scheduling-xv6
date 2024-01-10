@@ -1,4 +1,7 @@
 struct stat;
+struct pstat;
+enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+
 
 // system calls
 int fork(void);
@@ -23,6 +26,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int setpriority(int);
+int getpinfo(struct pstat *);
 
 // ulib.c
 int stat(const char*, struct stat*);

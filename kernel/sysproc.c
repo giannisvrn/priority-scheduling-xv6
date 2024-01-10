@@ -5,6 +5,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "pstat.h"
 
 uint64
 sys_exit(void)
@@ -97,4 +98,19 @@ sys_setpriority(void)
   int num;
   argint(0,&num); //retrieving first argument
   return setpriority(num);
+}
+
+uint64
+sys_getpinfo(void) { 
+  struct pstat pst;
+  uint64 addr;
+
+  argaddr(0, &addr); // Fetch user-supplied pointer from argument
+
+  getpinfo(&pst);
+
+  if (copyout(myproc()->pagetable, addr, (char*)&pst, sizeof(pst)) < 0)
+      return -1;
+
+  return 0;
 }

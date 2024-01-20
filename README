@@ -1,49 +1,70 @@
-xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
-Version 6 (v6).  xv6 loosely follows the structure and style of v6,
-but is implemented for a modern RISC-V multiprocessor using ANSI C.
+Υλοποίηση priority based scheduler:
+Για την υλοποίηση του priority based scheduler έπρεπε πρώτα να δημιουργήσουμε το setpriority syscall.
+Την συνάρτηση int setpriority(int num) την έχω υλοποιήσει στο kernel/proc.c όπου απλά το πεδίο priority του myproc(δηλαδή του proc που κάλεσαι την setpriority) παίρνει την τιμή num(εάν το num δεν έχει επιτρεπτή τιμή επιστρέφει -1).Στο ιδιο αρχείο, στην υλοποίηση της allocproc έχω προσθέσει την εντολή p->priority = 10; για να αρχικοποιεί την προτεραίοτητα των διεργασιών σε 10.
+Στην συνέχεια έχω δηλώσει την συνάρτηση setpriority στο defs.h. Στο αρχείο syscall.c και στο syscall.h δηλώνουμε το syscall.
+Έπειτα στο sysproc.c υλοποιούμε το syscall, όπου απλά καλούμε την συνάρτηση αφού πρώτα πάρουμε το όρισμα.
+Στο usys.pl ορίζουμε την assembly που καλεί το syscall και στο user.h δηλώνουμε το syscall.
+Στην συνέχεια θα ασχοληθούμε με την υλοποίηση του scheduler. Στην συνάρτηση αυτή ορίζουμε μια επιπλέον μεταβλητή τύπου struct proc *, στην οποία θα καταχωρήσουμε την διεργασία με την μικρότερη προτεραιότητα(αρχικά αρχικοποιείται με 0).Έπειτα για κάθε διεργασία που είναι σε state RUNNABLE ελέγχουμε για αρχή εάν το p_prio είναι κενό και άρα καταχωρούμε την διεργασία, διαφορετικά τοποθετούμε την διεργασία μόνο εάν έχει μικρότερη προτεραιότητα από την ήδη υπάρχουσα(έτσι υλοποίεται και round robin αλγόριθμος σε περίπτωση διεργασιών με ίση προτεραιότητα).Αφού ελέγξουμε όλες τις διεργασίες, θα τρέξουμε την διεργασία με την μικρότερη προτεραίοτητα( εάν υπήρχε κάποια διεργασία που ηταν σε state RUNNABLE, και αν αυτή η διεργασία που επιλέξαμε είναι ακόμα σε state RUNNABLE).
+Για την δοκιμή του καινούριου scheduler είχα δημιουργήσει ένα user level πρόγραμμα το οποίο έλεγχε την σειρά των διεργασιών με την οποία τελειώναν ανάλογα με την προτεραιότητα τους, όμως υπάρχει και ήδη υλοποιημένο το πρόγραμμα priotest.c 
+Μία τυχαία εκτέλεση αυτού του προγράμματος είναι η εξής :
 
-ACKNOWLEDGMENTS
+Child pid 19, small, with priority 2 finished. Useless sum: 448743748
+Child pid 38, small, with priority 2 finished. Useless sum: 448743748
+Child pid 20, small, with priority 3 finished. Useless sum: 448743748
+Child pid 39, small, with priority 3 finished. Useless sum: 448743748
+Child pid 21, small, with priority 4 finished. Useless sum: 448743748
+Child pid 40, small, with priority 4 finished. Useless sum: 448743748
+Child pid 22, small, with priority 5 finished. Useless sum: 448743748
+Child pid 41, small, with priority 5 finished. Useless sum: 448743748
+Child pid 23, small, with priority 6 finished. Useless sum: 448743748
+Child pid 42, small, with priority 6 finished. Useless sum: 448743748
+Child pid 24, small, with priority 7 finished. Useless sum: 448743748
+Child pid 43, small, with priority 7 finished. Useless sum: 448743748
+Child pid 44, small, with priority 8 finished. Useless sum: 448743748
+Child pid 25, small, with priority 8 finished. Useless sum: 448743748
+Child pid 26, small, with priority 9 finished. Useless sum: 448743748
+Child pid 45, small, with priority 9 finished. Useless sum: 448743748
+Child pid 8, small, with priority 10 finished. Useless sum: 448743748
+Child pid 27, small, with priority 10 finished. Useless sum: 448743748
+Child pid 46, small, with priority 10 finished. Useless sum: 448743748
+Child pid 28, small, with priority 11 finished. Useless sum: 448743748
+Child pid 9, small, with priority 11 finished. Useless sum: 448743748
+Child pid 47, small, with priority 11 finished. Useless sum: 448743748
+Child pid 10, small, with priority 12 finished. Useless sum: 448743748
+Child pid 29, small, with priority 12 finished. Useless sum: 448743748
+Child pid 11, small, with priority 13 finished. Useless sum: 448743748
+Child pid 12, small, with priority 14 finished. Useless sum: 448743748
+Child pid 30, small, with priority 13 finished. Useless sum: 448743748
+Child pid 31, small, with priority 14 finished. Useless sum: 448743748
+Child pid 32, small, with priority 15 finished. Useless sum: 448743748
+Child pid 13, small, with priority 15 finished. Useless sum: 448743748
+Child pid 14, small, with priority 16 finished. Useless sum: 448743748
+Child pid 33, small, with priority 16 finished. Useless sum: 448743748
+Child pid 15, small, with priority 17 finished. Useless sum: 448743748
+Child pid 34, small, with priority 17 finished. Useless sum: 448743748
+Child pid 5, large, with priority 16 finished. Useless sum: 1818368003
+Child pid 16, small, with priority 18 finished. Useless sum: 448743748
+Child pid 35, small, with priority 18 finished. Useless sum: 448743748
+Child pid 17, small, with priority 19 finished. Useless sum: 448743748
+Child pid 6, large, with priority 17 finished. Useless sum: 1818368003
+Child pid 36, small, with priority 19 finished. Useless sum: 448743748
+Child pid 7, large, with priority 18 finished. Useless sum: 1818368003
+Child pid 18, small, with priority 20 finished. Useless sum: 448743748
+Child pid 37, small, with priority 20 finished. Useless sum: 448743748
+Child pid 4, large, with priority 20 finished. Useless sum: 1818368003
 
-xv6 is inspired by John Lions's Commentary on UNIX 6th Edition (Peer
-to Peer Communications; ISBN: 1-57398-013-7; 1st edition (June 14,
-2000)).  See also https://pdos.csail.mit.edu/6.1810/, which provides
-pointers to on-line resources for v6.
+Τα ίδια βήματα με την υλοποίηση του syscall setpriority ακολούθησα για την υλοποίηση του syscall getpinfo.
+Η υλοποίηση του sys_getpinfo αποτελείται από την κλήση της getpinfo και την χρήση της copyout για την αντιγραφή δεδομένων από kernel σε user space.
+Επίσης χρειάστηκε να δημιουργήσουμε ένα καινούριο αρχείο το pstat.h το οποίο περίεχει την δήλωση του struct pstat.
+Για να μπορέσουμε να έχουμε ως πεδίο μια μεταβλητή τύπου enum procstate, έπρεπε να προσθέσουμε την δήλωση του enum procstate στο αρχείο user/user.h
+Η συνάρτηση getpinfo έχει υλοποιηθεί στο αρχείο kernel/proc.c. Αρχικά αρχικοποιούμε τον αριθμό των μη UNUSED processes σε 0. Στην συνέχεια ελέγχουμε όλες τις διεργασίες και αν είναι ενεργές(δηλαδή μη UNUSED) προσθέτουμε στην pst μεταβλητή μας τα πεδία που χρειαζόμαστε.
+Για την υλοποίηση της ps έχουμε δημιουργήσει ένα καινούριο πρόγραμμα user/ps.c στο οποίο(αρχικά αλλάζουμε το priority του ps σε 15 για να δούμε ότι δουλεύει και αυτό σωστά) καλούμε την getpinfo, και μέσω του pst εκτυπώνουμε τα δεδόμενα που έχουμε.
+Μία τυχαία εκτέλεσή του είναι η παρακάτω:
 
-The following people have made contributions: Russ Cox (context switching,
-locking), Cliff Frey (MP), Xiao Yu (MP), Nickolai Zeldovich, and Austin
-Clements.
+  PID  PPID  PRIORITY    NAME    SIZE       STATE 
+   1    -1       10        init      16384     SLEEPING
+   2    1       10        sh      20480     SLEEPING
+   3    2       15        ps      16384     RUNNING
 
-We are also grateful for the bug reports and patches contributed by
-Takahiro Aoyagi, Silas Boyd-Wickizer, Anton Burtsev, carlclone, Ian
-Chen, Dan Cross, Cody Cutler, Mike CAT, Tej Chajed, Asami Doi,
-eyalz800, Nelson Elhage, Saar Ettinger, Alice Ferrazzi, Nathaniel
-Filardo, flespark, Peter Froehlich, Yakir Goaron, Shivam Handa, Matt
-Harvey, Bryan Henry, jaichenhengjie, Jim Huang, Matúš Jókay, John
-Jolly, Alexander Kapshuk, Anders Kaseorg, kehao95, Wolfgang Keller,
-Jungwoo Kim, Jonathan Kimmitt, Eddie Kohler, Vadim Kolontsov, Austin
-Liew, l0stman, Pavan Maddamsetti, Imbar Marinescu, Yandong Mao, Matan
-Shabtay, Hitoshi Mitake, Carmi Merimovich, Mark Morrissey, mtasm, Joel
-Nider, Hayato Ohhashi, OptimisticSide, Harry Porter, Greg Price, Jude
-Rich, segfault, Ayan Shafqat, Eldar Sehayek, Yongming Shen, Fumiya
-Shigemitsu, Cam Tenny, tyfkda, Warren Toomey, Stephen Tu, Rafael Ubal,
-Amane Uehara, Pablo Ventura, Xi Wang, WaheedHafez, Keiichi Watanabe,
-Nicolas Wolovick, wxdao, Grant Wu, Jindong Zhang, Icenowy Zheng,
-ZhUyU1997, and Zou Chang Wei.
-
-
-The code in the files that constitute xv6 is
-Copyright 2006-2022 Frans Kaashoek, Robert Morris, and Russ Cox.
-
-ERROR REPORTS
-
-Please send errors and suggestions to Frans Kaashoek and Robert Morris
-(kaashoek,rtm@mit.edu).  The main purpose of xv6 is as a teaching
-operating system for MIT's 6.1810, so we are more interested in
-simplifications and clarifications than new features.
-
-BUILDING AND RUNNING XV6
-
-You will need a RISC-V "newlib" tool chain from
-https://github.com/riscv/riscv-gnu-toolchain, and qemu compiled for
-riscv64-softmmu.  Once they are installed, and in your shell
-search path, you can run "make qemu".
+Τέλος όταν τρέχουμε την εντολή usertests μας επιστρέφει στο τέλος:
+ALL TESTS PASSED
